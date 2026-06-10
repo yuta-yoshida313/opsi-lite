@@ -8,10 +8,11 @@
 //   - WikiLink: リンク部分のクリックはジャンプ、それ以外は行編集
 //   - コードブロック: クリックでコード編集モード(Source)へ
 
+use iced::alignment::Horizontal;
 use iced::widget::{
     button, checkbox, container, mouse_area, row, text, text_input, Column, Row, Space,
 };
-use iced::{Element, Font, Length};
+use iced::{Border, Element, Font, Length, Theme};
 
 use crate::app::{Message, ViewMode};
 use crate::table;
@@ -100,7 +101,10 @@ pub fn view<'a>(
         }
 
         // 引用
-        if let Some(rest) = trimmed.strip_prefix("> ").or_else(|| trimmed.strip_prefix('>')) {
+        if let Some(rest) = trimmed
+            .strip_prefix("> ")
+            .or_else(|| trimmed.strip_prefix('>'))
+        {
             let inner = container(inline_row(rest, 16.0, font))
                 .padding([2, 10])
                 .width(Length::Fill);
@@ -111,7 +115,11 @@ pub fn view<'a>(
 
         // 箇条書き
         if let Some(rest) = strip_bullet(trimmed) {
-            let r = row![text("•  ").size(16).font(font), inline_row(rest, 16.0, font)].spacing(2);
+            let r = row![
+                text("•  ").size(16).font(font),
+                inline_row(rest, 16.0, font)
+            ]
+            .spacing(2);
             col = col.push(clickable_line(i, r));
             i += 1;
             continue;
@@ -201,14 +209,13 @@ fn task_row(line_idx: usize, checked: bool, line: &str, font: Font) -> Element<'
         .map(|i| line[i + 1..].trim_start().to_string())
         .unwrap_or_default();
     let cb = checkbox(checked).on_toggle(move |_| Message::PreviewToggleTask(line_idx));
-    let label_el = mouse_area(
-        container(text(label).size(16).font(font)).width(Length::Fill),
-    )
-    .on_press(Message::LineFocus(line_idx));
+    let label_el = mouse_area(container(text(label).size(16).font(font)).width(Length::Fill))
+        .on_press(Message::LineFocus(line_idx));
     Row::new().spacing(6).push(cb).push(label_el).into()
 }
 
-/// テーブルを編集可能なグリッドとして描画。
+/// テーブルを罫線付きグリッドとして描画。
+/// ヘッダは背景強調＋太字、各列は区切り行(`:---:` 等)の指定に従って左右中央揃え。
 fn table_view<'a>(
     t: &table::Table,
     editing_cell: Option<(usize, usize)>,
@@ -216,58 +223,127 @@ fn table_view<'a>(
     font: Font,
 ) -> Element<'a, Message> {
     let cols = t.cols();
-    let mut grid = Column::new().spacing(2);
-    grid = grid.push(cell_row(t.header_line, &t.header, cols, editing_cell, edit_buffer, true, font));
-    grid = grid.push(container(Space::new().height(Length::Fixed(1.0))).width(Length::Fill));
+    // spacing(0) でセル同士を密着させ、各セルの 1px ボーダーが格子線になる。
+    let mut grid = Column::new().spacing(0);
+    grid = grid.push(cell_row(
+        t.header_line,
+        &t.header,
+        cols,
+        &t.aligns,
+        editing_cell,
+        edit_buffer,
+        true,
+        font,
+    ));
     for (line_idx, cells) in &t.body {
-        grid = grid.push(cell_row(*line_idx, cells, cols, editing_cell, edit_buffer, false, font));
+        grid = grid.push(cell_row(
+            *line_idx,
+            cells,
+            cols,
+            &t.aligns,
+            editing_cell,
+            edit_buffer,
+            false,
+            font,
+        ));
     }
-    container(grid).padding(6).width(Length::Fill).into()
+    container(grid).padding([8, 0]).width(Length::Fill).into()
 }
 
 fn cell_row<'a>(
     line_idx: usize,
     cells: &[String],
     cols: usize,
+    aligns: &[table::Align],
     editing_cell: Option<(usize, usize)>,
     edit_buffer: &'a str,
     header: bool,
     font: Font,
 ) -> Element<'a, Message> {
-    let mut r = Row::new().spacing(2);
+    let mut r = Row::new().spacing(0);
     for col in 0..cols {
         let value = cells.get(col).cloned().unwrap_or_default();
         let is_editing = editing_cell == Some((line_idx, col));
-        let cell: Element<'a, Message> = if is_editing {
+        let align = aligns.get(col).copied().unwrap_or(table::Align::None);
+        let inner: Element<'a, Message> = if is_editing {
             text_input("", edit_buffer)
                 .id(ACTIVE_INPUT_ID)
                 .on_input(Message::TableCellInput)
-                .on_submit(Message::TableCellCommit { line: line_idx, col })
+                .on_submit(Message::TableCellCommit {
+                    line: line_idx,
+                    col,
+                })
                 .font(font)
-                .padding(4)
+                .padding(0)
                 .size(14)
-                .width(Length::FillPortion(1))
+                .width(Length::Fill)
                 .into()
         } else {
-            let shown = if value.is_empty() { " ".to_string() } else { value };
-            let label = if header {
-                text(shown).size(14).font(Font {
-                    weight: iced::font::Weight::Bold,
-                    ..font
-                })
-            } else {
-                text(shown).size(14).font(font)
-            };
-            button(label)
-                .width(Length::FillPortion(1))
-                .padding(4)
-                .on_press(Message::TableCellFocus { line: line_idx, col })
-                .style(button::secondary)
-                .into()
+            // セル内容を行内描画(WikiLink はクリックでジャンプ)。
+            // リンク以外の余白をクリックするとセル編集に入る。
+            mouse_area(
+                container(cell_inline(&value, header, font))
+                    .width(Length::Fill)
+                    .align_x(align_x(align)),
+            )
+            .on_press(Message::TableCellFocus {
+                line: line_idx,
+                col,
+            })
+            .into()
         };
-        r = r.push(cell);
+        r = r.push(
+            container(inner)
+                .padding([5, 8])
+                .width(Length::FillPortion(1))
+                .style(cell_style(header)),
+        );
     }
     r.into()
+}
+
+/// セルの表示用行内要素(空セルでも高さを確保)。ヘッダは太字。
+fn cell_inline(value: &str, header: bool, font: Font) -> Element<'static, Message> {
+    let f = if header {
+        Font {
+            weight: iced::font::Weight::Bold,
+            ..font
+        }
+    } else {
+        font
+    };
+    let shown = if value.trim().is_empty() { " " } else { value };
+    inline_row(shown, 14.0, f)
+}
+
+/// 区切り行(`:---`, `---:`, `:---:`)で指定された列揃えを描画用に変換。
+fn align_x(a: table::Align) -> Horizontal {
+    match a {
+        table::Align::Right => Horizontal::Right,
+        table::Align::Center => Horizontal::Center,
+        _ => Horizontal::Left,
+    }
+}
+
+/// テーブルセルの罫線・背景スタイル。ヘッダは背景を一段強調する。
+fn cell_style(header: bool) -> impl Fn(&Theme) -> container::Style {
+    move |theme: &Theme| {
+        let palette = theme.extended_palette();
+        let background = if header {
+            palette.background.weak.color
+        } else {
+            palette.background.base.color
+        };
+        container::Style {
+            background: Some(background.into()),
+            border: Border {
+                color: palette.background.strong.color,
+                width: 1.0,
+                radius: 0.0.into(),
+            },
+            ..container::Style::default()
+        }
+    }
 }
 
 /// 行内の WikiLink をボタン化しつつテキストを描画(リンクはジャンプ)。
@@ -280,7 +356,11 @@ fn inline_row(line: &str, size: f32, font: Font) -> Element<'static, Message> {
     let mut last = 0usize;
     for l in links {
         if l.range.start > last {
-            r = r.push(text(line[last..l.range.start].to_string()).size(size).font(font));
+            r = r.push(
+                text(line[last..l.range.start].to_string())
+                    .size(size)
+                    .font(font),
+            );
         }
         let disp = l.display().to_string();
         let target = link_target(&l.inner);
