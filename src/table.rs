@@ -18,7 +18,7 @@ pub struct Table {
     /// ヘッダ行の本文行インデックス(0始まり)。区切り行は header_line + 1。
     pub header_line: usize,
     pub header: Vec<String>,
-    #[allow(dead_code)] // 将来のセル揃え描画用に保持(現状は解析のみ)
+    /// 各列の揃え(プレビュー描画でセル内容の左右中央寄せに使用)。
     pub aligns: Vec<Align>,
     /// 本文行: (本文行インデックス, セル群)。
     pub body: Vec<(usize, Vec<String>)>,
