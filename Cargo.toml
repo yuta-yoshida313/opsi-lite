@@ -1,0 +1,43 @@
+[package]
+name = "opsi-lite"
+version = "0.1.0"
+edition = "2021"
+description = "Obsidian互換・超軽量Markdownエディタ"
+authors = ["Opsi-Lite"]
+license = "MIT"
+readme = "README.md"
+
+[[bin]]
+name = "opsi-lite"
+path = "src/main.rs"
+
+[dependencies]
+# 仕様 3.1: 起動速度・メモリ最小化のため GPU(wgpu) ではなく
+# ソフトウェアレンダラ(tiny-skia) を採用し、GPU初期化のオーバーヘッドを排除する。
+# 日本語(IME)入力対応のため 0.14 を使用(0.13 は IME 非対応)。
+iced = { version = "0.14", default-features = false, features = ["tiny-skia", "advanced", "tokio"] }
+# 既定ブラウザでURL(寄付ページ等)を開くための軽量クロスプラットフォームクレート。
+open = "5"
+walkdir = "2"
+rfd = "0.15"
+
+# Tree-sitter ベースのハイライト/パースは feature で切り替え可能。
+# 既定ではビルドの確実性を優先し、内蔵の高速ラインレキサを使用する。
+tree-sitter = { version = "0.22", optional = true }
+tree-sitter-md = { version = "0.3", optional = true }
+
+[features]
+default = []
+treesitter = ["dep:tree-sitter", "dep:tree-sitter-md"]
+
+# Windows実行ファイルにアイコンを埋め込む(エクスプローラ/タスクバー表示用)。
+[target.'cfg(windows)'.build-dependencies]
+winresource = "0.1"
+
+# 非機能要件（起動速度・メモリ）の達成のため、リリースビルドを最適化する。
+[profile.release]
+opt-level = "z"     # サイズ最適化（小さいバイナリ＝高速起動・低メモリ）
+lto = true          # リンク時最適化
+codegen-units = 1
+panic = "abort"     # パニック巻き戻しコードを排除しサイズ削減
+strip = true        # シンボル除去

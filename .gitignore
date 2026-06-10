@@ -1,0 +1,8 @@
+/target
+/_odt_extract
+/_screenshot.png
+/_exe_icon.png
+**/*.rs.bk
+Cargo.lock.bak
+# 設計用の仕様書(大きなバイナリ)は公開リポジトリには含めない
+*.odt
