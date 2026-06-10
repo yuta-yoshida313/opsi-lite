@@ -1,0 +1,29 @@
+# winget マニフェスト(default locale)。
+PackageIdentifier: YoshidaSoftware.OpsiLite
+PackageVersion: 0.1.0
+PackageLocale: en-US
+Publisher: Yoshida Software
+PublisherUrl: https://github.com/yuta-yoshida313
+PublisherSupportUrl: https://github.com/yuta-yoshida313/opsi-lite/issues
+Author: Yuta Yoshida
+PackageName: Opsi-Lite
+PackageUrl: https://github.com/yuta-yoshida313/opsi-lite
+License: MIT
+LicenseUrl: https://github.com/yuta-yoshida313/opsi-lite/blob/main/LICENSE
+ShortDescription: A tiny, fast native Markdown editor with Obsidian-style wikilinks, tasks and tables.
+Description: |-
+  Opsi-Lite is an ultra-lightweight, native Markdown editor (Rust + iced) that opens any local
+  Markdown file instantly — no Vault required. It supports Obsidian-style WikiLinks ([[note]])
+  with autocomplete and jump, interactive task checkboxes, in-place table editing, IME (Japanese)
+  input, and theme/font settings. Starts in ~0.2s and uses ~25MB of RAM.
+Moniker: opsi-lite
+Tags:
+  - markdown
+  - markdown-editor
+  - obsidian
+  - editor
+  - note-taking
+  - rust
+  - wikilink
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

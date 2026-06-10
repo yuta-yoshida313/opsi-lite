@@ -1,7 +1,19 @@
 # Opsi-Lite
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/yuta-yoshida313/opsi-lite)](https://github.com/yuta-yoshida313/opsi-lite/releases/latest)
 [![ko-fi](https://img.shields.io/badge/Support-Ko--fi-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/yoshidasoftware)
+
+> **Vault不要。ローカルの任意フォルダにあるMarkdownを“一瞬で開いて編集”する、超軽量ネイティブエディタ。**
+> Obsidianの便利な記法（WikiLink・タスク・テーブル）はそのままに、**起動 約0.2秒・メモリ 約25MB**。
+
+![Opsi-Lite スクリーンショット](assets/screenshot.png)
+
+- ⚡ **爆速・軽量** — Rust + iced のネイティブGUI。Electron不使用で起動0.2秒・常駐25MB前後
+- 📝 **プレビューでそのまま編集** — 行をクリックして編集（Obsidian Live Preview方式）
+- 🔗 **WikiLink** — `[[ノート名]]` の補完・F12ジャンプ・自動新規作成
+- ✅ **タスク / テーブル** — チェックボックスのトグル、表のセル編集
+- 🌏 **日本語(IME)対応** ・ テーマ/フォント設定 ・ MITライセンス（無料）
 
 Obsidian互換・超軽量Markdownエディタ（Rust + iced ネイティブGUI）。
 
@@ -99,9 +111,11 @@ Opsi-Lite は **無料** で配布しています（MITライセンス）。
 
 ## インストール
 
-GitHub Releases から `opsi-lite.exe` をダウンロードして実行してください。
+[GitHub Releases](https://github.com/yuta-yoshida313/opsi-lite/releases/latest) から `opsi-lite-*.exe` をダウンロードして実行してください（インストール不要）。
 未署名のため初回起動時に Windows SmartScreen の警告が出る場合があります。
 その場合は「詳細情報」→「実行」で起動できます。
+
+（winget / Scoop 用のマニフェストは [`packaging/`](packaging/) にあります。）
 
 ```powershell
 # ソースからビルドする場合

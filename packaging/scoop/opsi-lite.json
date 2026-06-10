@@ -1,0 +1,27 @@
+{
+    "version": "0.1.0",
+    "description": "Vault不要・超軽量なObsidian互換Markdownエディタ (Rust + iced)。WikiLink/タスク/テーブル対応。",
+    "homepage": "https://github.com/yuta-yoshida313/opsi-lite",
+    "license": "MIT",
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/yuta-yoshida313/opsi-lite/releases/download/v0.1.0/opsi-lite-v0.1.0-windows-x64.exe#/opsi-lite.exe",
+            "hash": "dd76ebc3c9ce5cfaeb3c0c94dd97511c85aa545d1ab6e4ae2d55a8f91ad34232"
+        }
+    },
+    "bin": "opsi-lite.exe",
+    "shortcuts": [
+        [
+            "opsi-lite.exe",
+            "Opsi-Lite"
+        ]
+    ],
+    "checkver": "github",
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://github.com/yuta-yoshida313/opsi-lite/releases/download/v$version/opsi-lite-v$version-windows-x64.exe#/opsi-lite.exe"
+            }
+        }
+    }
+}
